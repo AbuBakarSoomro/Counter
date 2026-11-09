@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2f1eb">
+  <title>Counter Pair</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20231f;
+      --paper: #f2f1eb;
+      --line: rgba(32, 35, 31, .18);
+      --quiet: rgba(32, 35, 31, .62);
+      --left: #f04472;
+      --right: #f7c928;
+      font-family: "Trebuchet MS", "Arial Rounded MT Bold", sans-serif;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 290px;
+      min-height: 100vh;
+      min-height: 100svh;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image: radial-gradient(rgba(32, 35, 31, .09) .7px, transparent .7px);
+      background-size: 13px 13px;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      width: min(100%, 980px);
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0 auto;
+      padding: max(14px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 2px 14px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: #d7edcf;
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .brand-name { font-size: 16px; font-weight: 900; letter-spacing: .02em; }
+    .brand-note { margin-top: 2px; color: var(--quiet); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+
+    .view-button {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 13px;
+      border: 2px solid var(--ink);
+      border-radius: 9px;
+      background: var(--ink);
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .view-button:active { transform: translateY(1px); }
+    .view-button svg { width: 17px; height: 17px; }
+
+    .counter-board {
+      display: grid;
+      flex: 1;
+      min-height: 0;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      overflow: hidden;
+      border: 3px solid var(--ink);
+      border-radius: 17px;
+      background: var(--ink);
+      box-shadow: 0 7px 0 rgba(32, 35, 31, .18);
+    }
+
+    .counter-panel {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      padding: clamp(12px, 3vw, 24px);
+      background: var(--panel-color);
+      color: var(--panel-ink, #20231f);
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background-color .18s ease;
+    }
+    .counter-panel + .counter-panel { border-left: 3px solid var(--ink); }
+    .counter-panel:focus-visible { outline: 4px solid currentColor; outline-offset: -7px; }
+
+    .panel-settings {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .name-input {
+      width: 100%;
+      min-width: 0;
+      padding: 5px 0;
+      border: 0;
+      border-bottom: 1px solid transparent;
+      outline: 0;
+      background: transparent;
+      color: inherit;
+      font-size: clamp(12px, 2.5vw, 15px);
+      font-weight: 900;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+    }
+    .name-input:focus { border-bottom-color: currentColor; }
+    .name-input::placeholder { color: inherit; opacity: .7; }
+
+    .color-picker {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      padding: 3px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+    }
+    .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-picker::-webkit-color-swatch { border: 0; border-radius: 50%; }
+    .color-picker::-moz-color-swatch { border: 0; border-radius: 50%; }
+
+    .panel-title {
+      display: none;
+      overflow: hidden;
+      font-size: clamp(12px, 2.5vw, 15px);
+      font-weight: 900;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .count-display {
+      display: grid;
+      flex: 1;
+      min-height: 0;
+      place-items: center;
+      padding: 10px 0;
+      font-size: clamp(58px, 16vw, 132px);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -.055em;
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .panel-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .action-button {
+      display: grid;
+      width: 48px;
+      min-height: 48px;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .28);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .action-button:active { background: rgba(255, 255, 255, .55); transform: scale(.98); }
+    .action-button svg { width: 21px; height: 21px; stroke-width: 2.7; }
+    .action-button.reset svg { width: 21px; height: 21px; }
+
+    .hint {
+      padding: 13px 4px 0;
+      color: var(--quiet);
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    body.presentation { background: var(--ink); }
+    body.presentation .app { width: 100%; padding: 0; }
+    body.presentation .topbar, body.presentation .hint { display: none; }
+    body.presentation .counter-board { border: 0; border-radius: 0; box-shadow: none; }
+    body.presentation .counter-panel { padding: clamp(12px, 4vw, 40px); }
+    body.presentation .panel-settings { min-height: 34px; justify-content: center; }
+    body.presentation .name-input, body.presentation .color-picker { display: none; }
+    body.presentation .panel-title { display: block; width: 100%; text-align: center; }
+    body.presentation .count-display { font-size: clamp(64px, 19vw, 180px); }
+    body.presentation .panel-actions { display: none; }
+    body.presentation .counter-board:fullscreen { height: 100%; }
+    body.presentation .counter-board:fullscreen .counter-panel { padding-top: max(18px, env(safe-area-inset-top)); padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+
+    @media (orientation: portrait) and (max-width: 600px) {
+      .app { padding-right: 10px; padding-left: 10px; }
+      .counter-board { min-height: 300px; }
+      .counter-panel { padding: 10px; }
+      .action-button { border-radius: 8px; }
+      .action-button.reset svg { width: 18px; height: 18px; }
+      .hint { font-size: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand" aria-label="Counter Pair, works offline">
+        <div class="brand-mark" aria-hidden="true">+</div>
+        <div>
+          <div class="brand-name">Counter Pair</div>
+          <div class="brand-note">Two tallies · works offline</div>
+        </div>
+      </div>
+      <button class="view-button" id="view-toggle" type="button" aria-pressed="false" title="Switch to full view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg>
+        <span>Full view</span>
+      </button>
+    </header>
+
+    <section class="counter-board" aria-label="Counters">
+      <article class="counter-panel" data-counter="0" style="--panel-color: var(--left)" tabindex="0" aria-label="Team one counter. Tap to increase.">
+        <div class="panel-settings">
+          <input class="name-input" aria-label="Name for counter one" maxlength="24" value="Team one" autocomplete="off">
+          <span class="panel-title" aria-hidden="true">Team one</span>
+          <input class="color-picker" type="color" aria-label="Color for counter one" value="#f04472">
+        </div>
+        <output class="count-display" aria-live="polite">0</output>
+        <div class="panel-actions">
+          <button class="action-button reset" type="button" aria-label="Reset Team one" title="Reset counter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <article class="counter-panel" data-counter="1" style="--panel-color: var(--right)" tabindex="0" aria-label="Team two counter. Tap to increase.">
+        <div class="panel-settings">
+          <input class="name-input" aria-label="Name for counter two" maxlength="24" value="Team two" autocomplete="off">
+          <span class="panel-title" aria-hidden="true">Team two</span>
+          <input class="color-picker" type="color" aria-label="Color for counter two" value="#f7c928">
+        </div>
+        <output class="count-display" aria-live="polite">0</output>
+        <div class="panel-actions">
+          <button class="action-button reset" type="button" aria-label="Reset Team two" title="Reset counter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+      </article>
+    </section>
+    <footer class="hint">Tap either panel to count · your counters are saved on this device</footer>
+  </main>
+
+  <script>
+    const storageKey = "counter-pair-state-v1";
+    const panels = [...document.querySelectorAll(".counter-panel")];
+    const viewToggle = document.querySelector("#view-toggle");
+    let savedState = [];
+
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      if (Array.isArray(parsed)) savedState = parsed;
+    } catch {
+      savedState = [];
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(panels.map((panel) => ({
+          name: panel.querySelector(".name-input").value,
+          color: panel.querySelector(".color-picker").value,
+          count: Number(panel.querySelector(".count-display").value)
+        }))));
+      } catch {
+        // The counters remain usable if storage is unavailable.
+      }
+    }
+
+    function setPanelColor(panel, color) {
+      panel.style.setProperty("--panel-color", color);
+      const hex = color.slice(1);
+      const red = parseInt(hex.slice(0, 2), 16);
+      const green = parseInt(hex.slice(2, 4), 16);
+      const blue = parseInt(hex.slice(4, 6), 16);
+      const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+      panel.style.setProperty("--panel-ink", luminance > 0.62 ? "#20231f" : "#ffffff");
+    }
+
+    function setCount(panel, count) {
+      panel.querySelector(".count-display").value = String(count);
+      save();
+    }
+
+    panels.forEach((panel, index) => {
+      const input = panel.querySelector(".name-input");
+      const title = panel.querySelector(".panel-title");
+      const colorPicker = panel.querySelector(".color-picker");
+      const countDisplay = panel.querySelector(".count-display");
+      const initial = savedState[index];
+
+      if (initial && typeof initial.name === "string") input.value = initial.name.slice(0, 24);
+      if (initial && /^#[\da-f]{6}$/i.test(initial.color)) colorPicker.value = initial.color;
+      if (initial && Number.isSafeInteger(initial.count)) countDisplay.value = String(initial.count);
+
+      title.textContent = input.value || `Counter ${index + 1}`;
+      setPanelColor(panel, colorPicker.value);
+      input.addEventListener("input", () => {
+        title.textContent = input.value || `Counter ${index + 1}`;
+        panel.setAttribute("aria-label", `${title.textContent} counter. Tap to increase.`);
+        panel.querySelector(".reset").setAttribute("aria-label", `Reset ${title.textContent}`);
+        save();
+      });
+      colorPicker.addEventListener("input", () => {
+        setPanelColor(panel, colorPicker.value);
+        save();
+      });
+      panel.addEventListener("click", (event) => {
+        if (event.target.closest("button, input")) return;
+        setCount(panel, Number(countDisplay.value) + 1);
+      });
+      panel.addEventListener("keydown", (event) => {
+        if ((event.key === "Enter" || event.key === " ") && !event.target.closest("button, input")) {
+          event.preventDefault();
+          setCount(panel, Number(countDisplay.value) + 1);
+        }
+      });
+      panel.querySelector(".reset").addEventListener("click", () => setCount(panel, 0));
+    });
+
+    async function setPresentation(enabled) {
+      document.body.classList.toggle("presentation", enabled);
+      viewToggle.setAttribute("aria-pressed", String(enabled));
+      viewToggle.title = enabled ? "Exit full view" : "Switch to full view";
+      viewToggle.querySelector("span").textContent = enabled ? "Exit view" : "Full view";
+
+      if (enabled && document.documentElement.requestFullscreen) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch {
+          // Keep the larger presentation layout when native fullscreen is unavailable.
+        }
+      } else if (!enabled && document.fullscreenElement && document.exitFullscreen) {
+        try {
+          await document.exitFullscreen();
+        } catch {
+          // The presentation toggle still works without native fullscreen.
+        }
+      }
+    }
+
+    viewToggle.addEventListener("click", () => {
+      setPresentation(!document.body.classList.contains("presentation"));
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && document.body.classList.contains("presentation")) setPresentation(false);
+    });
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) setPresentation(false);
+    });
+  </script>
+</body>
+</html>
