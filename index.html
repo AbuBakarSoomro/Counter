@@ -162,17 +162,29 @@
     }
 
     .count-display {
-      display: grid;
+      display: block;
+      width: 100%;
       flex: 1;
+      min-width: 0;
       min-height: 0;
-      place-items: center;
       padding: 10px 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: center;
       font-size: clamp(58px, 16vw, 132px);
       font-weight: 900;
       font-variant-numeric: tabular-nums;
       letter-spacing: -.055em;
       line-height: 1;
       overflow-wrap: anywhere;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .count-display::-webkit-outer-spin-button,
+    .count-display::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .panel-actions {
@@ -275,7 +287,7 @@
           <span class="panel-title" aria-hidden="true">Team one</span>
           <input class="color-picker" type="color" aria-label="Color for counter one" value="#f04472">
         </div>
-        <output class="count-display" aria-live="polite">0</output>
+        <input class="count-display" type="number" inputmode="numeric" pattern="[0-9]*" aria-live="polite" value="0" aria-label="Team one count">
         <div class="panel-actions">
           <button class="action-button reset" type="button" aria-label="Reset Team one" title="Reset counter">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>
@@ -289,7 +301,7 @@
           <span class="panel-title" aria-hidden="true">Team two</span>
           <input class="color-picker" type="color" aria-label="Color for counter two" value="#f7c928">
         </div>
-        <output class="count-display" aria-live="polite">0</output>
+        <input class="count-display" type="number" inputmode="numeric" pattern="[0-9]*" aria-live="polite" value="0" aria-label="Team two count">
         <div class="panel-actions">
           <button class="action-button reset" type="button" aria-label="Reset Team two" title="Reset counter">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>
@@ -297,7 +309,7 @@
         </div>
       </article>
     </section>
-    <footer class="hint">Tap either panel to count · your counters are saved on this device</footer>
+    <footer class="hint">Tap a panel to add 1, or type any number directly · your counters are saved on this device</footer>
   </main>
 
   <script>
@@ -335,8 +347,15 @@
       panel.style.setProperty("--panel-ink", luminance > 0.62 ? "#20231f" : "#ffffff");
     }
 
+    function normalizeCount(value) {
+      if (value === "" || value === null || value === undefined) return 0;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
     function setCount(panel, count) {
-      panel.querySelector(".count-display").value = String(count);
+      const safeCount = Number.isFinite(count) ? count : 0;
+      panel.querySelector(".count-display").value = String(safeCount);
       save();
     }
 
@@ -355,12 +374,17 @@
       setPanelColor(panel, colorPicker.value);
       input.addEventListener("input", () => {
         title.textContent = input.value || `Counter ${index + 1}`;
-        panel.setAttribute("aria-label", `${title.textContent} counter. Tap to increase.`);
+        panel.setAttribute("aria-label", `${title.textContent} counter. Tap to increase or type a number.`);
         panel.querySelector(".reset").setAttribute("aria-label", `Reset ${title.textContent}`);
         save();
       });
       colorPicker.addEventListener("input", () => {
         setPanelColor(panel, colorPicker.value);
+        save();
+      });
+      countDisplay.addEventListener("input", () => {
+        const nextValue = normalizeCount(countDisplay.value);
+        countDisplay.value = String(nextValue);
         save();
       });
       panel.addEventListener("click", (event) => {
