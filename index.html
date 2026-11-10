@@ -106,6 +106,7 @@
       background: var(--panel-color);
       color: var(--panel-ink, #20231f);
       cursor: pointer;
+      container-type: inline-size;
       touch-action: manipulation;
       transition: background-color .18s ease;
     }
@@ -173,6 +174,7 @@
       color: inherit;
       text-align: center;
       font-size: clamp(58px, 16vw, 132px);
+      font-size: clamp(32px, 38cqw, 132px);
       font-weight: 900;
       font-variant-numeric: tabular-nums;
       letter-spacing: -.055em;
@@ -228,7 +230,12 @@
       font-size: clamp(24px, 5vh, 52px);
       text-align: center;
     }
-    body.presentation .count-display { font-size: clamp(80px, 24vh, 260px); }
+    body.presentation .count-display {
+      font-size: clamp(80px, 24vh, 260px);
+      font-size: clamp(32px, 38cqw, 260px);
+      pointer-events: none;
+      user-select: none;
+    }
     body.presentation .panel-actions { display: none; }
     body.presentation .counter-board:fullscreen { height: 100%; }
     body.presentation .counter-board:fullscreen .counter-panel { padding-top: max(18px, env(safe-area-inset-top)); padding-bottom: max(18px, env(safe-area-inset-bottom)); }
@@ -402,6 +409,9 @@
 
     async function setPresentation(enabled) {
       document.body.classList.toggle("presentation", enabled);
+      panels.forEach((panel) => {
+        panel.querySelector(".count-display").readOnly = enabled;
+      });
       viewToggle.setAttribute("aria-pressed", String(enabled));
       viewToggle.title = enabled ? "Exit full view" : "Switch to full view";
       viewToggle.querySelector("span").textContent = enabled ? "Exit view" : "Full view";
